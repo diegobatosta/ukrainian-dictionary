@@ -1,0 +1,5 @@
+spring:
+  application.name: ukrainian-dictionary
+  flyway:
+    enabled: true
+    locations: classpath:db/migration

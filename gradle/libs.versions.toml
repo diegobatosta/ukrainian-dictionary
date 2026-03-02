@@ -1,0 +1,7 @@
+[versions]
+assertj = "3.27.7"
+mockito = "5.22.0"
+
+[libraries]
+assertj = { module = "org.assertj:assertj-core", version.ref = "assertj" }
+mockito = { module = "org.mockito:mockito-core", version.ref = "mockito" }
