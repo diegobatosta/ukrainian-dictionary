@@ -3,3 +3,5 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+
+cross-origin.urls: http://localhost:4200

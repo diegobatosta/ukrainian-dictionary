@@ -7,11 +7,11 @@ interface EntryController {
 
     fun add(dto: EntryDto): ResponseEntity<Unit>
 
-    fun remove(id: Long): ResponseEntity<Unit>
+    fun update(slug: String, dto: EntryDto): ResponseEntity<Unit>
 
-    fun fetch(id: Long): ResponseEntity<EntryDto>
+    fun delete(slug: String): ResponseEntity<Unit>
 
-    fun fetchAll(): ResponseEntity<List<EntryDto>>
+    fun findBySlug(slug: String): ResponseEntity<EntryDto>
 
-    fun update(id: Long, dto: EntryDto): ResponseEntity<Unit>
+    fun findByQuery(query: String): ResponseEntity<List<EntryDto>>
 }

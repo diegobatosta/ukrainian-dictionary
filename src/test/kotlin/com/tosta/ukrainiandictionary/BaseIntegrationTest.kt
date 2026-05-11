@@ -27,6 +27,6 @@ abstract class BaseIntegrationTest {
 
     protected fun getHost(): String = "http://localhost:$port"
 
-    protected fun getEntryId(result: ExchangeResult): Long =
-        result.responseHeaders.location!!.path.substringAfterLast("/").toLong()
+    protected fun getSlug(result: ExchangeResult): String =
+        result.responseHeaders.location!!.path.substringAfterLast("/")
 }

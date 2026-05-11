@@ -1,18 +1,21 @@
 package com.tosta.ukrainiandictionary.model.dto
 
 import com.tosta.ukrainiandictionary.model.entity.Entry
+import com.tosta.ukrainiandictionary.utils.slugify
 
 data class EntryDto(
-    val inUkrainian: String?,
-    val inRussian: String?,
-    val inEnglish: String?,
+    val slug: String?,
+    val ukrainian: String,
+    val russian: String,
+    val english: String,
 ) {
-    fun toEntity(id: Long? = null): Entry {
+
+    fun toEntity(): Entry {
         return Entry(
-            id = id,
-            inUkrainian = inUkrainian,
-            inRussian = inRussian,
-            inEnglish = inEnglish,
+            slug = slug ?: ukrainian.slugify(),
+            ukrainian = ukrainian,
+            russian = russian,
+            english = english,
         )
     }
 }
