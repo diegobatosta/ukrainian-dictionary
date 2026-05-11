@@ -4,11 +4,13 @@ import com.tosta.ukrainiandictionary.model.entity.Entry
 
 interface EntryService {
 
-    fun save(entry: Entry): Entry
+    fun findBySlug(slug: String): Entry?
 
-    fun delete(id: Long)
+    fun findByQuery(query: String): List<Entry>
 
-    fun find(id: Long): Entry?
+    fun add(entry: Entry): Entry
 
-    fun findAll(): List<Entry>
+    fun update(slug: String, entry: Entry)
+
+    fun delete(slug: String)
 }
