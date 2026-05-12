@@ -9,7 +9,7 @@ plugins {
 }
 
 group = "com.tosta"
-version = "0.1.0"
+version = project.property("version")!!
 description = "A Ukrainian dictionary with Russian and English translations"
 
 java {
