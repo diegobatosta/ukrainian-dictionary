@@ -81,3 +81,7 @@ tasks.withType<Test> {
 tasks.clean {
     delete(layout.buildDirectory.dir("generated"))
 }
+
+tasks.bootJar {
+    archiveFileName = "app.jar"
+}
