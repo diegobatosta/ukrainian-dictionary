@@ -6,11 +6,20 @@ plugins {
     id("io.spring.dependency-management") version "1.1.7"
     id("org.openapi.generator") version "7.20.0"
     id("org.springframework.boot") version "4.0.3"
+
+    id("pl.allegro.tech.build.axion-release") version "1.21.2"
 }
 
 group = "com.tosta"
-version = project.property("version")!!
+version = scmVersion.version
 description = "A Ukrainian dictionary with Russian and English translations"
+
+scmVersion {
+    tag {
+        prefix.set("v")
+    }
+}
+
 
 java {
     toolchain {
