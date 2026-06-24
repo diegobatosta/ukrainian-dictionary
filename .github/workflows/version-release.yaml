@@ -1,0 +1,124 @@
+name: Version release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up the JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: temurin
+
+      - name: Run tests
+        run: ./gradlew test
+
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    needs: test
+    outputs:
+      version: ${{ steps.bump-version.outputs.version }}
+
+    steps:
+      - name: Generate GitHub App token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ secrets.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ steps.generate-token.outputs.token }}
+
+      - name: Configure Git identity with the GitHub App
+        run: |
+          BOT_NAME="${{ steps.generate-token.outputs.app-slug }}[bot]"
+          BOT_ID=$(gh api "/users/${BOT_NAME}" --jq .id)
+
+          git config user.name "${BOT_NAME}"
+          git config user.email "${BOT_ID}+${BOT_NAME}@users.noreply.github.com"
+        env:
+          # GitHub's CLI detects this token automatically for authentication. Read more here:
+          # https://cli.github.com/manual/gh_help_environment
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+
+      - name: Set up the JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: temurin
+
+      - name: Determine the version bump
+        id: determine-version-bump
+        run: |
+          BUMP="patch"
+          if git log $(git describe --tags --abbrev=0)..HEAD --pretty="%s" | grep -q "^feat"; then
+            BUMP="minor"
+          fi
+          if git log $(git describe --tags --abbrev=0)..HEAD --pretty="%B" | grep -qE "^.+!:|BREAKING CHANGE"; then
+            BUMP="major"
+          fi
+          echo "bump=$BUMP" >> $GITHUB_OUTPUT
+
+      - name: Bump the version
+        id: bump-version
+        run: |
+          INCREMENTER="increment$(echo ${{ steps.determine-version-bump.outputs.bump }} | sed 's/./\u&/')"
+
+          ./gradlew release -Prelease.versionIncrementer=$INCREMENTER
+
+          echo "version=$(./gradlew currentVersion -q -Prelease.quiet)" >> $GITHUB_OUTPUT
+        env:
+          # Axion Release Plugin uses Grgit under the hood. See more here:
+          # https://github.com/allegro/axion-release-plugin
+          GRGIT_USER: x-access-token
+          GRGIT_PASS: ${{ steps.generate-token.outputs.token }}
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: release
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up the JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: temurin
+
+      - name: Build the JAR
+        run: ./gradlew bootJar -x test
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_READ_WRITE_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/ukrainian-dictionary:${{ needs.release.outputs.version }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/ukrainian-dictionary:latest
